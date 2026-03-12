@@ -21,7 +21,16 @@ final class RecordingIndicatorWindow: NSPanel {
         ignoresMouseEvents = true
 
         let hostingView = NSHostingView(rootView: RecordingIndicatorView())
-        contentView = hostingView
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 140, height: 36))
+        container.addSubview(hostingView)
+        NSLayoutConstraint.activate([
+            hostingView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            hostingView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            hostingView.topAnchor.constraint(equalTo: container.topAnchor),
+            hostingView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+        ])
+        contentView = container
 
         positionNearMenuBar()
     }

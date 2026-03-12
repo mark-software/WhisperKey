@@ -37,7 +37,7 @@ xcodebuild -project WhisperKey.xcodeproj -scheme WhisperKey -configuration Debug
 
 # Build and run
 xcodebuild -project WhisperKey.xcodeproj -scheme WhisperKey -configuration Debug build
-open ~/Library/Developer/Xcode/DerivedData/WhisperKey-*/Build/Products/Debug/WhisperKey.app 
+open ~/Library/Developer/Xcode/DerivedData/WhisperKey-*/Build/Products/Debug/WhisperKey.app
 
 # Clean build
 xcodebuild -project WhisperKey.xcodeproj -scheme WhisperKey clean build
@@ -79,3 +79,95 @@ WhisperKey/
 │       └── WhisperKey.entitlements
 ```
 
+---
+
+## Bundle Identifier
+`com.whisperkey.app`
+
+---
+
+## Signing — CRITICAL
+
+**The app must be signed with a real Developer identity for microphone permission to work.**
+
+macOS 15 silently blocks microphone permission requests from ad-hoc signed apps — no prompt
+appears, the app never shows up in the Microphone list, and TCC shows "Denied" with no way
+to fix it via `tccutil`. This is not a code bug.
+
+**How to set up signing (one-time):**
+1. Open Xcode → click the `WhisperKey` project in the navigator
+2. Select the `WhisperKey` target → **Signing & Capabilities**
+3. Set **Team** to your personal Apple ID team (`mjohnson@hopskipdrive.com`)
+4. Xcode manages the rest automatically
+
+**Available signing identity:** `Apple Development: mjohnson@hopskipdrive.com (G4TYJC77K2)`
+
+Once signing is configured, permissions work normally.
+
+---
+
+## Build & Install
+
+**The golden path — do this exactly:**
+
+1. Build and run from Xcode (Cmd+R) to get permission prompts
+2. Grant Microphone and Accessibility when prompted
+3. Copy that exact Xcode binary to /Applications — **DO NOT reset permissions**
+4. Launch `/Applications/WhisperKey.app` — permissions carry over via signing identity
+
+```bash
+# After granting permissions via Xcode run:
+rm -rf /Applications/WhisperKey.app
+cp -R ~/Library/Developer/Xcode/DerivedData/WhisperKey-*/Build/Products/Debug/WhisperKey.app \
+  /Applications/WhisperKey.app
+```
+
+**DO NOT run `tccutil reset` after copying.** Permissions are tied to the signing identity,
+not the path. Same cert = same grant. Resetting destroys it and the mic prompt will never
+reappear (macOS 15 silently blocks re-prompted mic requests for this app).
+
+---
+
+## Resetting Permissions
+
+### Reset everything (recommended after any reinstall)
+
+```bash
+tccutil reset All com.whisperkey.app
+```
+
+### Reset individual permissions
+
+```bash
+tccutil reset Microphone com.whisperkey.app
+tccutil reset Accessibility com.whisperkey.app
+```
+
+> **Note:** Each command prints two "Successfully reset" lines — user TCC DB and system
+> TCC DB. That's expected.
+
+---
+
+## Permission Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| No mic prompt ever appears, app not in Microphone list | App is ad-hoc signed — macOS 15 silently blocks unsigned apps from requesting mic | Set Team in Xcode Signing & Capabilities, rebuild |
+| Status tab shows "Denied" after enabling toggle in System Settings | TCC has a stale denial record | `tccutil reset All com.whisperkey.app` + relaunch |
+| Transcription outputs "you" or short random words | Whisper hallucinating on silence — mic not actually capturing audio | Fix mic permission first |
+| Hotkey does nothing after granting Accessibility | App started before permission was granted | App auto-retries every 2s — wait a moment |
+| Two WhisperKey entries in System Settings | Old build + new build both registered | `tccutil reset All` clears both; relaunch registers fresh |
+
+---
+
+## Running from Xcode vs /Applications
+
+macOS tracks permissions **per executable path + signing identity**.
+
+- The Xcode debug build and `/Applications/WhisperKey.app` are treated as separate apps
+  by TCC — each needs its own permission grant.
+- For daily use: run `/Applications/WhisperKey.app` (release build).
+- For development: run from Xcode (Cmd+R) — the Xcode build uses your Developer signing
+  and gets its own TCC entry. Grant permissions once; they persist across Xcode runs.
+- **Do not** use `tccutil reset` between Xcode runs during development — you'll have to
+  re-approve every time.
