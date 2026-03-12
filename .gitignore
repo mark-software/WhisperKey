@@ -1,0 +1,99 @@
+# ========================
+# macOS
+# ========================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# ========================
+# Xcode
+# ========================
+
+# User-specific settings
+*.xcuserstate
+xcuserdata/
+
+# Xcode workspace schemes (keep shared schemes, ignore personal)
+!*.xcodeproj/xcshareddata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Build products
+build/
+DerivedData/
+*.o
+*.hmap
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# Instruments
+*.trace
+
+# Archives
+*.xcarchive
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# ========================
+# Swift Package Manager
+# ========================
+.build/
+.swiftpm/
+*.resolved
+
+# Keep Package.resolved for reproducible builds (comment out if preferred)
+# Package.resolved
+
+# ========================
+# CocoaPods (if ever added)
+# ========================
+Pods/
+*.xcworkspace
+!default.xcworkspace
+
+# ========================
+# Carthage (if ever added)
+# ========================
+Carthage/Build/
+Carthage/Checkouts/
+
+# ========================
+# fastlane (if ever added)
+# ========================
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+# ========================
+# Code signing
+# ========================
+*.p12
+*.mobileprovision
+*.provisionprofile
+ExportOptions.plist
+
+# ========================
+# Xcode Cloud / CI
+# ========================
+ci_scripts/
+
+# ========================
+# Misc
+# ========================
+*.log
+*.tmp
+*.swp
+*~
+.env
+.env.local
