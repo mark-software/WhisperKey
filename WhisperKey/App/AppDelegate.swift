@@ -1,5 +1,6 @@
 import AppKit
 import AVFoundation
+import Combine
 
 /// Main application delegate handling lifecycle and wiring all components together
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -11,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let modelDownloader = ModelDownloader()
     private var recordingIndicator: RecordingIndicatorWindow?
     private var isProcessing = false
+    private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         setupPermissions()
@@ -61,6 +63,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         hotkeyManager.start()
+
+        // Retry starting the hotkey listener when accessibility permission is granted after launch
+        PermissionManager.shared.$accessibilityGranted
+            .removeDuplicates()
+            .filter { $0 }
+            .receive(on: DispatchQueue.main)
+            .sink { _ in
+                HotkeyManager.shared.start()
+            }
+            .store(in: &cancellables)
     }
 
     private func loadModel() {
