@@ -10,8 +10,15 @@
 
 WhisperKey lives in your menu bar and turns speech into text with a single hotkey. Hold the key, speak, release — your words appear wherever your cursor is. All transcription runs locally on your Mac using [whisper.cpp](https://github.com/ggerganov/whisper.cpp), so nothing ever leaves your machine.
 
-<!-- TODO: Add demo GIF -->
-<!-- ![WhisperKey Demo](docs/demo.gif) -->
+<p align="center">
+  <img src="screenshots/recording-window.png" width="300" alt="Recording indicator">
+</p>
+
+<p align="center">
+  <img src="screenshots/settings-general.png" width="250" alt="General settings">
+  <img src="screenshots/settings-model.png" width="250" alt="Model selection">
+  <img src="screenshots/settings-permissions.png" width="250" alt="Permissions status">
+</p>
 
 ## Features
 
@@ -34,14 +41,14 @@ WhisperKey lives in your menu bar and turns speech into text with a single hotke
 
 ### Download
 
-Download the latest release from [GitHub Releases](https://github.com/markymark/WhisperKey/releases).
+Download the latest release from [GitHub Releases](https://github.com/mark-software/WhisperKey/releases).
 
 <!-- TODO: Update with actual release URL -->
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/markymark/WhisperKey.git
+git clone https://github.com/mark-software/WhisperKey.git
 cd WhisperKey
 open WhisperKey.xcodeproj
 ```
@@ -105,7 +112,7 @@ Contributions are welcome!
 - Use **protocols** for testability
 - All classes/structs get **doc comments**
 
-Check the [issues](https://github.com/markymark/WhisperKey/issues) for things to work on.
+Check the [issues](https://github.com/mark-software/WhisperKey/issues) for things to work on.
 
 <!-- TODO: Update with actual repo URL -->
 
