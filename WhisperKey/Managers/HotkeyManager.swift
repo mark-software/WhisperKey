@@ -2,6 +2,75 @@ import Foundation
 import AppKit
 import CoreGraphics
 
+/// Represents the action to take in response to a hotkey event
+enum HotkeyAction: Equatable {
+    /// The hotkey was pressed down
+    case press
+    /// The hotkey was released
+    case release
+    /// The event should be passed through unchanged
+    case passthrough
+}
+
+/// Pure logic handler for hotkey state machine, extracted for testability
+struct HotkeyEventHandler {
+    /// Whether the hotkey is currently held down
+    var isHotkeyPressed: Bool = false
+
+    /// Handle a modifier-only hotkey event (e.g. just the Option key)
+    mutating func handleModifierOnlyHotkey(
+        type: CGEventType,
+        keyCode: UInt16,
+        flags: CGEventFlags,
+        binding: HotkeyBinding
+    ) -> HotkeyAction {
+        guard type == .flagsChanged else {
+            return .passthrough
+        }
+
+        let expectedFlags = CGEventFlags(rawValue: UInt64(binding.modifierFlags))
+
+        guard keyCode == binding.keyCode else {
+            return .passthrough
+        }
+
+        if flags.contains(expectedFlags) && !isHotkeyPressed {
+            isHotkeyPressed = true
+            return .press
+        } else if !flags.contains(expectedFlags) && isHotkeyPressed {
+            isHotkeyPressed = false
+            return .release
+        }
+
+        return .passthrough
+    }
+
+    /// Handle a regular hotkey event (e.g. Cmd+Shift+A)
+    mutating func handleRegularHotkey(
+        type: CGEventType,
+        keyCode: UInt16,
+        flags: CGEventFlags,
+        binding: HotkeyBinding
+    ) -> HotkeyAction {
+        guard keyCode == binding.keyCode else {
+            return .passthrough
+        }
+
+        let requiredFlags = CGEventFlags(rawValue: UInt64(binding.modifierFlags))
+        let hasRequiredModifiers = binding.modifierFlags == 0 || flags.contains(requiredFlags)
+
+        if type == .keyDown && hasRequiredModifiers && !isHotkeyPressed {
+            isHotkeyPressed = true
+            return .press
+        } else if type == .keyUp && isHotkeyPressed {
+            isHotkeyPressed = false
+            return .release
+        }
+
+        return .passthrough
+    }
+}
+
 /// Manages global hotkey detection via CGEvent tap
 final class HotkeyManager {
     static let shared = HotkeyManager()
@@ -15,7 +84,7 @@ final class HotkeyManager {
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private var tapThread: Thread?
-    private var isHotkeyPressed = false
+    private var eventHandler = HotkeyEventHandler()
 
     private init() {}
 
@@ -68,7 +137,7 @@ final class HotkeyManager {
         runLoopSource = nil
         tapThread?.cancel()
         tapThread = nil
-        isHotkeyPressed = false
+        eventHandler.isHotkeyPressed = false
     }
 
     /// Handle a CGEvent and determine if it matches the hotkey
@@ -81,66 +150,30 @@ final class HotkeyManager {
         }
 
         let binding = AppSettings.shared.hotkeyBinding
+        let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+        let flags = event.flags
 
+        let action: HotkeyAction
         if binding.isModifierOnly {
-            return handleModifierOnlyHotkey(type: type, event: event, binding: binding)
+            action = eventHandler.handleModifierOnlyHotkey(type: type, keyCode: keyCode, flags: flags, binding: binding)
         } else {
-            return handleRegularHotkey(type: type, event: event, binding: binding)
-        }
-    }
-
-    private func handleModifierOnlyHotkey(type: CGEventType, event: CGEvent, binding: HotkeyBinding) -> Unmanaged<CGEvent>? {
-        guard type == .flagsChanged else {
-            return Unmanaged.passUnretained(event)
+            action = eventHandler.handleRegularHotkey(type: type, keyCode: keyCode, flags: flags, binding: binding)
         }
 
-        let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
-        let flags = event.flags
-        let expectedFlags = CGEventFlags(rawValue: UInt64(binding.modifierFlags))
-
-        if keyCode == binding.keyCode {
-            if flags.contains(expectedFlags) && !isHotkeyPressed {
-                isHotkeyPressed = true
-                DispatchQueue.main.async { [weak self] in
-                    self?.onHotkeyDown?()
-                }
-            } else if !flags.contains(expectedFlags) && isHotkeyPressed {
-                isHotkeyPressed = false
-                DispatchQueue.main.async { [weak self] in
-                    self?.onHotkeyUp?()
-                }
-            }
-        }
-
-        return Unmanaged.passUnretained(event)
-    }
-
-    private func handleRegularHotkey(type: CGEventType, event: CGEvent, binding: HotkeyBinding) -> Unmanaged<CGEvent>? {
-        let keyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
-
-        guard keyCode == binding.keyCode else {
-            return Unmanaged.passUnretained(event)
-        }
-
-        let flags = event.flags
-        let requiredFlags = CGEventFlags(rawValue: UInt64(binding.modifierFlags))
-        let hasRequiredModifiers = binding.modifierFlags == 0 || flags.contains(requiredFlags)
-
-        if type == .keyDown && hasRequiredModifiers && !isHotkeyPressed {
-            isHotkeyPressed = true
+        switch action {
+        case .press:
             DispatchQueue.main.async { [weak self] in
                 self?.onHotkeyDown?()
             }
-            return nil // consume the event
-        } else if type == .keyUp && keyCode == binding.keyCode && isHotkeyPressed {
-            isHotkeyPressed = false
+            return binding.isModifierOnly ? Unmanaged.passUnretained(event) : nil
+        case .release:
             DispatchQueue.main.async { [weak self] in
                 self?.onHotkeyUp?()
             }
-            return nil // consume the event
+            return binding.isModifierOnly ? Unmanaged.passUnretained(event) : nil
+        case .passthrough:
+            return Unmanaged.passUnretained(event)
         }
-
-        return Unmanaged.passUnretained(event)
     }
 }
 

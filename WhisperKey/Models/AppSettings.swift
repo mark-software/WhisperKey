@@ -6,7 +6,7 @@ import ServiceManagement
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
 
     private enum Keys {
         static let hotkeyKeyCode = "hotkeyKeyCode"
@@ -61,7 +61,14 @@ final class AppSettings: ObservableObject {
         }
     }
 
-    private init() {
+    private convenience init() {
+        self.init(defaults: .standard)
+    }
+
+    /// Initialize with a specific UserDefaults instance (for testing)
+    init(defaults: UserDefaults) {
+        self.defaults = defaults
+
         let savedKeyCode = defaults.object(forKey: Keys.hotkeyKeyCode) as? Int
         let savedModifierFlags = defaults.object(forKey: Keys.hotkeyModifierFlags) as? UInt
         let savedIsModifierOnly = defaults.object(forKey: Keys.hotkeyIsModifierOnly) as? Bool

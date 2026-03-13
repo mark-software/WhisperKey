@@ -10,8 +10,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let transcriber = WhisperTranscriber()
     private let textOutputManager = TextOutputManager()
     private let modelDownloader = ModelDownloader()
+    private lazy var recordingPipeline = RecordingPipeline(
+        recorder: audioRecorder,
+        transcriber: transcriber,
+        textOutput: textOutputManager
+    )
     private var recordingIndicator: RecordingIndicatorWindow?
-    private var isProcessing = false
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -106,10 +110,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Recording Pipeline
 
     private func startRecording() {
-        guard !isProcessing else { return }
-
         do {
-            try audioRecorder.startRecording()
+            try recordingPipeline.startRecording()
             menuBarManager?.setRecording(true)
             recordingIndicator?.showIndicator()
 
@@ -122,7 +124,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func stopRecordingAndTranscribe() {
-        let samples = audioRecorder.stopRecording()
         menuBarManager?.setRecording(false)
         recordingIndicator?.hideIndicator()
 
@@ -130,43 +131,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSSound.pop?.play()
         }
 
-        guard !samples.isEmpty else {
-            print("AppDelegate: No audio samples captured")
-            return
-        }
-
-        guard transcriber.isModelLoaded else {
-            print("AppDelegate: Model not loaded, cannot transcribe")
-            return
-        }
-
-        isProcessing = true
-
         Task {
-            do {
-                let text = try await transcriber.transcribe(samples: samples)
-
-                await MainActor.run {
-                    guard !text.isEmpty else {
-                        print("AppDelegate: Transcription returned empty text")
-                        isProcessing = false
-                        return
-                    }
-
-                    let settings = AppSettings.shared
-                    textOutputManager.output(
-                        text: text,
-                        autoPaste: settings.autoPasteEnabled
-                    )
-
-                    isProcessing = false
-                }
-            } catch {
-                await MainActor.run {
-                    print("AppDelegate: Transcription failed: \(error)")
-                    isProcessing = false
-                }
-            }
+            await recordingPipeline.stopRecordingAndTranscribe(
+                autoPaste: AppSettings.shared.autoPasteEnabled
+            )
         }
     }
 }
