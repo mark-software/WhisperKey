@@ -17,9 +17,7 @@ build:
 		-derivedDataPath $(DERIVED_DATA) \
 		ARCHS=arm64 \
 		ONLY_ACTIVE_ARCH=NO \
-		CODE_SIGN_IDENTITY="-" \
-		CODE_SIGNING_REQUIRED=NO \
-		CODE_SIGNING_ALLOWED=NO
+		CODE_SIGN_IDENTITY="-"
 
 zip: build
 	ditto -c -k --keepParent "$(APP_PATH)" "$(ZIP_PATH)"
