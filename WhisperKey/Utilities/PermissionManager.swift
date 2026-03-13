@@ -14,7 +14,7 @@ final class PermissionManager: ObservableObject {
 
     private init() {
         checkPermissions()
-        startPollingAccessibility()
+        startPollingPermissions()
     }
 
     deinit {
@@ -79,9 +79,10 @@ final class PermissionManager: ObservableObject {
         }
     }
 
-    /// Poll accessibility permission periodically (it can change while app is running)
-    private func startPollingAccessibility() {
+    /// Poll permissions periodically (they can change while app is running)
+    private func startPollingPermissions() {
         timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+            self?.checkMicrophonePermission()
             self?.checkAccessibilityPermission()
         }
     }
