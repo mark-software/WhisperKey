@@ -21,7 +21,16 @@ final class RecordingIndicatorWindow: NSPanel {
         ignoresMouseEvents = true
 
         let hostingView = NSHostingView(rootView: RecordingIndicatorView())
-        contentView = hostingView
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 140, height: 36))
+        container.addSubview(hostingView)
+        NSLayoutConstraint.activate([
+            hostingView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            hostingView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            hostingView.topAnchor.constraint(equalTo: container.topAnchor),
+            hostingView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+        ])
+        contentView = container
 
         positionNearMenuBar()
     }
@@ -76,7 +85,11 @@ struct RecordingIndicatorView: View {
             Capsule()
                 .fill(Color.black.opacity(0.75))
         )
-        .shadow(color: Color(red: 0.36, green: 0.88, blue: 0.84).opacity(0.45), radius: 12, x: 0, y: 0)
+        .overlay(
+            Capsule()
+                .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                .shadow(color: Color.white.opacity(0.25), radius: 3, x: 0, y: 0)
+        )
         .shadow(color: Color.black.opacity(0.4), radius: 4, x: 0, y: 2)
         .onAppear {
             isPulsing = true
