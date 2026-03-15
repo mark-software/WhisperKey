@@ -29,15 +29,11 @@ final class PermissionManager: ObservableObject {
 
     /// Check microphone permission status
     func checkMicrophonePermission() {
-        switch AVCaptureDevice.authorizationStatus(for: .audio) {
-        case .authorized:
-            DispatchQueue.main.async { self.microphoneGranted = true }
-        case .notDetermined:
-            DispatchQueue.main.async { self.microphoneGranted = false }
-        case .denied, .restricted:
-            DispatchQueue.main.async { self.microphoneGranted = false }
-        @unknown default:
-            DispatchQueue.main.async { self.microphoneGranted = false }
+        let granted = AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
+        if Thread.isMainThread {
+            microphoneGranted = granted
+        } else {
+            DispatchQueue.main.async { self.microphoneGranted = granted }
         }
     }
 
@@ -54,8 +50,10 @@ final class PermissionManager: ObservableObject {
     /// Check accessibility permission
     func checkAccessibilityPermission() {
         let trusted = AXIsProcessTrusted()
-        DispatchQueue.main.async {
-            self.accessibilityGranted = trusted
+        if Thread.isMainThread {
+            accessibilityGranted = trusted
+        } else {
+            DispatchQueue.main.async { self.accessibilityGranted = trusted }
         }
     }
 
