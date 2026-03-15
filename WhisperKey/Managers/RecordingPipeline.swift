@@ -29,7 +29,7 @@ final class RecordingPipeline {
     }
 
     /// Stop recording and transcribe the captured audio
-    func stopRecordingAndTranscribe(autoPaste: Bool) async {
+    func stopRecordingAndTranscribe(autoPaste: Bool, copyToClipboard: Bool) async {
         let samples = recorder.stopRecording()
 
         guard !samples.isEmpty else {
@@ -54,7 +54,7 @@ final class RecordingPipeline {
                 return
             }
 
-            textOutput.output(text: trimmed, autoPaste: autoPaste)
+            textOutput.output(text: trimmed, autoPaste: autoPaste, copyToClipboard: copyToClipboard)
             onTranscriptionComplete?(trimmed)
             isProcessing = false
         } catch {

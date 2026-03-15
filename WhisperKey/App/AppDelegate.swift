@@ -133,7 +133,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         Task {
             await recordingPipeline.stopRecordingAndTranscribe(
-                autoPaste: AppSettings.shared.autoPasteEnabled
+                autoPaste: AppSettings.shared.autoPasteEnabled,
+                copyToClipboard: AppSettings.shared.copyToClipboardEnabled
             )
         }
     }

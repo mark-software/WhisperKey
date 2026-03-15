@@ -29,11 +29,28 @@ final class TextOutputManager: TextOutputting {
     }
 
     /// Copy text and optionally paste it into the active field
-    func output(text: String, autoPaste: Bool) {
-        copyToClipboard(text)
+    func output(text: String, autoPaste: Bool, copyToClipboard: Bool) {
+        if copyToClipboard {
+            self.copyToClipboard(text)
 
-        if autoPaste {
+            if autoPaste {
+                pasteFromClipboard()
+            }
+        } else if autoPaste {
+            // Save current clipboard, paste transcribed text, then restore
+            let pasteboard = NSPasteboard.general
+            let previousContents = pasteboard.string(forType: .string)
+
+            self.copyToClipboard(text)
             pasteFromClipboard()
+
+            // Restore previous clipboard after paste completes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                pasteboard.clearContents()
+                if let previous = previousContents {
+                    pasteboard.setString(previous, forType: .string)
+                }
+            }
         }
     }
 }

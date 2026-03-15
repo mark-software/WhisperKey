@@ -53,7 +53,7 @@ final class RecordingPipelineTests: XCTestCase {
     func testStopAndTranscribe_emptySamples_skipsTranscription() async {
         mockRecorder.samplesToReturn = []
         mockTranscriber.isModelLoaded = true
-        await pipeline.stopRecordingAndTranscribe(autoPaste: true)
+        await pipeline.stopRecordingAndTranscribe(autoPaste: true, copyToClipboard: true)
         XCTAssertEqual(mockTranscriber.transcribeCallCount, 0)
         XCTAssertEqual(mockOutput.outputCallCount, 0)
     }
@@ -61,7 +61,7 @@ final class RecordingPipelineTests: XCTestCase {
     func testStopAndTranscribe_modelNotLoaded_skipsTranscription() async {
         mockRecorder.samplesToReturn = [0.1, 0.2, 0.3]
         mockTranscriber.isModelLoaded = false
-        await pipeline.stopRecordingAndTranscribe(autoPaste: true)
+        await pipeline.stopRecordingAndTranscribe(autoPaste: true, copyToClipboard: true)
         XCTAssertEqual(mockTranscriber.transcribeCallCount, 0)
         XCTAssertEqual(mockOutput.outputCallCount, 0)
     }
@@ -70,7 +70,7 @@ final class RecordingPipelineTests: XCTestCase {
         mockRecorder.samplesToReturn = [0.1, 0.2, 0.3]
         mockTranscriber.isModelLoaded = true
         mockTranscriber.textToReturn = "hello world"
-        await pipeline.stopRecordingAndTranscribe(autoPaste: true)
+        await pipeline.stopRecordingAndTranscribe(autoPaste: true, copyToClipboard: true)
         XCTAssertEqual(mockOutput.outputCallCount, 1)
         XCTAssertEqual(mockOutput.lastCopiedText, "hello world")
         XCTAssertEqual(mockOutput.lastAutoPasteValue, true)
@@ -81,7 +81,7 @@ final class RecordingPipelineTests: XCTestCase {
         mockRecorder.samplesToReturn = [0.1, 0.2, 0.3]
         mockTranscriber.isModelLoaded = true
         mockTranscriber.textToReturn = "hello world"
-        await pipeline.stopRecordingAndTranscribe(autoPaste: false)
+        await pipeline.stopRecordingAndTranscribe(autoPaste: false, copyToClipboard: true)
         XCTAssertEqual(mockOutput.lastAutoPasteValue, false)
     }
 
@@ -89,7 +89,7 @@ final class RecordingPipelineTests: XCTestCase {
         mockRecorder.samplesToReturn = [0.1, 0.2, 0.3]
         mockTranscriber.isModelLoaded = true
         mockTranscriber.transcribeShouldThrow = NSError(domain: "test", code: 1)
-        await pipeline.stopRecordingAndTranscribe(autoPaste: true)
+        await pipeline.stopRecordingAndTranscribe(autoPaste: true, copyToClipboard: true)
         XCTAssertFalse(pipeline.isProcessing)
         XCTAssertEqual(mockOutput.outputCallCount, 0)
     }
@@ -98,7 +98,7 @@ final class RecordingPipelineTests: XCTestCase {
         mockRecorder.samplesToReturn = [0.1, 0.2, 0.3]
         mockTranscriber.isModelLoaded = true
         mockTranscriber.textToReturn = "   \n  "
-        await pipeline.stopRecordingAndTranscribe(autoPaste: true)
+        await pipeline.stopRecordingAndTranscribe(autoPaste: true, copyToClipboard: true)
         XCTAssertEqual(mockOutput.outputCallCount, 0)
         XCTAssertFalse(pipeline.isProcessing)
     }

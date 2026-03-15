@@ -9,5 +9,5 @@ protocol TextOutputting {
     func pasteFromClipboard()
 
     /// Copy text and optionally paste it
-    func output(text: String, autoPaste: Bool)
+    func output(text: String, autoPaste: Bool, copyToClipboard: Bool)
 }

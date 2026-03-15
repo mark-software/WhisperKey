@@ -16,9 +16,12 @@ final class MockTextOutputManager: TextOutputting {
         pasteCallCount += 1
     }
 
-    func output(text: String, autoPaste: Bool) {
+    var lastCopyToClipboardValue: Bool?
+
+    func output(text: String, autoPaste: Bool, copyToClipboard: Bool) {
         outputCallCount += 1
         lastCopiedText = text
         lastAutoPasteValue = autoPaste
+        lastCopyToClipboardValue = copyToClipboard
     }
 }
