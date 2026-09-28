@@ -151,6 +151,11 @@ struct StatusSettingsTab: View {
     @ObservedObject var modelDownloader: ModelDownloader
     @ObservedObject var settings: AppSettings
 
+    /// The version from the app bundle, so it always matches the build
+    private var appVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+    }
+
     var body: some View {
         Form {
             Section("Permissions") {
@@ -209,7 +214,7 @@ struct StatusSettingsTab: View {
             Section {
                 HStack {
                     Spacer()
-                    Text("WhisperKey v1.0")
+                    Text("WhisperKey v\(appVersion)")
                         .foregroundColor(.secondary)
                         .font(.caption)
                     Spacer()
